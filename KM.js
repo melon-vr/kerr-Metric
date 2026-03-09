@@ -150,26 +150,27 @@ var tick = (elapsedTime, multiplier) => {
 
     theta = (theta + elapsedTime * 0.1) % (2 * Math.PI);
 
-    let rVal = r.toNumber();
+    let rVal = r;
 
     let Sigma =
-        rVal * rVal +
-        spin * spin * Math.pow(Math.cos(theta), 2);
+        rVal.pow(2)
+        .plus(BigNumber.from(spin * spin * Math.pow(Math.cos(theta), 2)));
 
     let Delta =
-        rVal * rVal -
-        rVal +
-        spin * spin;
+        rVal.pow(2)
+        .minus(rVal)
+        .plus(spin * spin);
 
-    Delta = Math.max(Delta, 1e-6);
+    if (Delta <= 0)
+        Delta = BigNumber.from(1e-6);
 
     let sigmaPow = 1 + sigmaExp.level * 0.05;
     let deltaPow = 1 + deltaExp.level * 0.05;
 
     let growth =
-        getK1(rUpgrade.level) *
-        Math.pow(Sigma, sigmaPow) /
-        Math.pow(Delta, deltaPow);
+        getK1(rUpgrade.level)
+        * Sigma.toNumber() ** sigmaPow
+        / Math.pow(Delta.toNumber(), deltaPow);
 
     let dr = BigNumber.from(growth).times(dt);
 
