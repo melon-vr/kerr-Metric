@@ -8,7 +8,7 @@ var id = "kerr_metric";
 var name = "Kerr Spacetime Dynamics";
 var description = "Production derived from rotating spacetime geometry.";
 var authors = "qrze, melon";
-var version = 1.1.4;
+var version = 1.2.0;
 
 var currency;
 
@@ -18,16 +18,14 @@ var sigmaExp, deltaExp;
 var chapter1, chapter2, chapter3, chapter4;
 
 var r = BigNumber.ONE;
-var theta = 1;
+var theta = 0;
 var spin = 0.5;
 
 var init = () => {
-
     currency = theory.createCurrency();
 
     ///////////////////
     // Regular upgrades
-
     {
         let getDesc = (lvl) => "k_1=" + getK1(lvl).toString(0);
 
@@ -75,14 +73,12 @@ var init = () => {
 
     /////////////////////
     // Permanent upgrades
-
     theory.createPublicationUpgrade(0, currency, 1e8);
     theory.createBuyAllUpgrade(1, currency, 1e12);
     theory.createAutoBuyerUpgrade(2, currency, 1e20);
 
     //////////////////////
     // Milestone upgrades
-
     theory.setMilestoneCost(new LinearCost(25, 25));
 
     sigmaExp = theory.createMilestoneUpgrade(0, 3);
@@ -105,7 +101,6 @@ var init = () => {
 
     ///////////////////
     // Story chapters
-
     chapter1 = theory.createStoryChapter(
         0,
         "The Rotating Metric",
@@ -154,14 +149,14 @@ var tick = (elapsedTime, multiplier) => {
 
     let Sigma =
         rVal.pow(2)
-        .plus(BigNumber.from(spin * spin * Math.pow(Math.cos(theta), 2)));
+        .plus(spin * spin * Math.pow(Math.cos(theta), 2));
 
     let Delta =
         rVal.pow(2)
         .minus(rVal)
         .plus(spin * spin);
 
-    if (Delta <= 0)
+    if (Delta.lte(0))
         Delta = BigNumber.from(1e-6);
 
     let sigmaPow = 1 + sigmaExp.level * 0.05;
@@ -169,10 +164,10 @@ var tick = (elapsedTime, multiplier) => {
 
     let growth =
         getK1(rUpgrade.level)
-        * Sigma.toNumber() ** sigmaPow
-        / Math.pow(Delta.toNumber(), deltaPow);
+        .times(Sigma.pow(sigmaPow))
+        .div(Delta.pow(deltaPow));
 
-    let dr = BigNumber.from(growth).times(dt);
+    let dr = growth.times(dt);
 
     r = r.plus(dr);
 
